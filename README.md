@@ -1,43 +1,40 @@
-# BlueBuild Template &nbsp; [![bluebuild build badge](https://github.com/blue-build/template/actions/workflows/build.yml/badge.svg)](https://github.com/blue-build/template/actions/workflows/build.yml)
+# invincent-os &nbsp; [![bluebuild build badge](https://github.com/tvblomberg/invincent-os/actions/workflows/build.yml/badge.svg)](https://github.com/tvblomberg/invincent-os/actions/workflows/build.yml)
 
-See the [BlueBuild docs](https://blue-build.org/how-to/setup/) for quick setup instructions for setting up your own repository based on this template.
+My personal Fedora atomic image: [wayblue](https://github.com/wayblueorg/wayblue) Hyprland plus the packages, services and Flatpaks I use, built daily with [BlueBuild](https://blue-build.org/).
 
-After setup, it is recommended you update this README to describe your custom image.
+Everything that used to be layered with `rpm-ostree install` lives in [`recipes/recipe.yml`](recipes/recipe.yml) instead:
 
-## Installation
+- **Packages:** ghostty, zsh, neovim, bat, btop, fd, ripgrep, swappy, gtk-murrine-engine, podman-compose, libvirt/qemu/virt-manager, tailscale, rpmrebuild
+- **Services:** tailscaled, libvirtd
+- **Flatpaks:** installed on first boot if missing (system scope, Flathub)
 
-> [!WARNING]  
-> [This is an experimental feature](https://www.fedoraproject.org/wiki/Changes/OstreeNativeContainerStable), try at your own discretion.
+User configuration lives in the dotfiles repo, not here.
 
-To rebase an existing atomic Fedora installation to the latest build:
+## Rebuilding a machine
 
-- First rebase to the unsigned image, to get the proper signing keys and policies installed:
-  ```
-  rpm-ostree rebase ostree-unverified-registry:ghcr.io/blue-build/template:latest
-  ```
-- Reboot to complete the rebase:
-  ```
-  systemctl reboot
-  ```
-- Then rebase to the signed image, like so:
-  ```
-  rpm-ostree rebase ostree-image-signed:docker://ghcr.io/blue-build/template:latest
-  ```
-- Reboot again to complete the installation
-  ```
-  systemctl reboot
-  ```
+1. Install [wayblue](https://github.com/wayblueorg/wayblue) Hyprland.
+2. Rebase to the unsigned image first, to get the signing key and policy installed, then reboot:
+   ```
+   rpm-ostree rebase ostree-unverified-registry:ghcr.io/tvblomberg/invincent-os:latest
+   systemctl reboot
+   ```
+3. Rebase to the signed image and reboot again:
+   ```
+   rpm-ostree rebase ostree-image-signed:docker://ghcr.io/tvblomberg/invincent-os:latest
+   systemctl reboot
+   ```
+4. Restore the dotfiles and run their bootstrap.
 
-The `latest` tag will automatically point to the latest build. That build will still always use the Fedora version specified in `recipe.yml`, so you won't get accidentally updated to the next major version.
+## Changing the image
 
-## ISO
-
-If build on Fedora Atomic, you can generate an offline ISO with the instructions available [here](https://blue-build.org/how-to/generate-iso/#_top). These ISOs cannot unfortunately be distributed on GitHub for free due to large sizes, so for public projects something else has to be used for hosting.
+Edit `recipes/recipe.yml` and push. GitHub Actions builds and signs a new image (also daily at 06:00 UTC); `rpm-ostree upgrade` or `os-update` picks it up.
 
 ## Verification
 
-These images are signed with [Sigstore](https://www.sigstore.dev/)'s [cosign](https://github.com/sigstore/cosign). You can verify the signature by downloading the `cosign.pub` file from this repo and running the following command:
+Images are signed with [cosign](https://github.com/sigstore/cosign):
 
 ```bash
-cosign verify --key cosign.pub ghcr.io/blue-build/template
+cosign verify --key cosign.pub ghcr.io/tvblomberg/invincent-os
 ```
+
+The private key is stored as the `SIGNING_SECRET` repository secret and in my password manager; it is never committed.

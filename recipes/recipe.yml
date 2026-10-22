@@ -1,45 +1,98 @@
----
 # yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
-# image will be published to ghcr.io/<user>/<name>
-name: template
-# description will be included in the image's metadata
-description: This is my personal OS image.
+# image will be published to ghcr.io/tvblomberg/invincent-os
+name: invincent-os
+description: Personal Fedora atomic image built on wayblue Hyprland.
 
-# the base image to build on top of (FROM) and the version tag to use
-base-image: ghcr.io/ublue-os/silverblue-main
-image-version: latest # You can pin to a specific version of Fedora as well
+# wayblue only supports the latest tag
+base-image: ghcr.io/wayblueorg/hyprland
+image-version: latest
 
-# module configuration, executed in order
-# you can include multiple instances of the same module
 modules:
   - type: files
     files:
       - source: system
-        destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
+        destination: / # copies files/system/* into the image root
 
   - type: dnf
     repos:
+      cleanup: true # don't ship the extra repo files in the image
       copr:
-        - atim/starship
+        - scottames/ghostty
+      files:
+        - https://pkgs.tailscale.com/stable/fedora/tailscale.repo
     install:
       packages:
-        - micro
-        - starship
-    remove:
-      packages:
-        # example: removing firefox (in favor of the flatpak)
-        # "firefox" is the main package, "firefox-langpacks" is a dependency
-        - firefox
-        - firefox-langpacks # also remove firefox dependency (not required for all packages, this is a special case)
+        # terminal and CLI
+        - ghostty
+        - zsh
+        - neovim
+        - bat
+        - btop
+        - fd-find
+        - ripgrep
+        # desktop
+        - swappy
+        - gtk-murrine-engine
+        # containers and VMs
+        - podman-compose
+        - libvirt
+        - qemu-kvm
+        - virt-manager
+        # networking
+        - tailscale
+        # packaging tools
+        - rpmrebuild
+
+  - type: systemd
+    system:
+      enabled:
+        - tailscaled.service
+        - libvirtd.service
+        - libvirtd.socket
 
   - type: default-flatpaks
     configurations:
-      - notify: true # Send notification after install/uninstall is finished (true/false)
+      - notify: true
         scope: system
-        # If no repo information is specified, Flathub will be used by default
-        install: # system flatpaks we want all users to have and not remove
-          - org.mozilla.firefox
-          - org.gnome.Loupe
-      - scope: user # Also add Flathub user repo, but no user packages
+        # Flathub by default
+        install:
+          # browsers
+          - app.zen_browser.zen
+          - com.brave.Browser
+          # development
+          - com.visualstudio.code
+          - com.getpostman.Postman
+          - io.podman_desktop.PodmanDesktop
+          - com.microsoft.AzureStorageExplorer
+          # notes and passwords
+          - md.obsidian.Obsidian
+          - com.bitwarden.desktop
+          # media
+          - com.spotify.Client
+          - org.videolan.VLC
+          - org.gimp.GIMP
+          - org.flameshot.Flameshot
+          - com.github.wwmm.easyeffects
+          # office
+          - org.libreoffice.LibreOffice
+          - org.gnome.FileRoller
+          # 3D printing and electronics
+          - com.bambulab.BambuStudio
+          - com.ultimaker.cura
+          - org.kicad.KiCad
+          - org.openscad.OpenSCAD
+          # system tools
+          - com.github.tchx84.Flatseal
+          - io.github.flattool.Warehouse
+          - io.github.v81d.Wattage
+          - org.easycoding.TunedSwitcher
+          - org.gnome.World.PikaBackup
+          - org.kde.filelight
+          - org.kde.isoimagewriter
+          - com.gitlab.davem.ClamTk
+          # other
+          - com.moonlight_stream.Moonlight
+          - com.usebottles.bottles
+          - org.remmina.Remmina
 
-  - type: signing # this sets up the proper policy & signing files for signed images to work fully
+  - type: signing # signing policy and key so ostree-image-signed rebases verify
