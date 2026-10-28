@@ -30,6 +30,7 @@ modules:
         - btop
         - fd-find
         - ripgrep
+        - chezmoi  # dotfiles (github.com/tvblomberg/dotfiles)
         # desktop
         - swappy
         - gtk-murrine-engine

@@ -23,7 +23,7 @@ User configuration lives in the dotfiles repo, not here.
    rpm-ostree rebase ostree-image-signed:docker://ghcr.io/tvblomberg/invincent-os:latest
    systemctl reboot
    ```
-4. Restore the dotfiles and run their bootstrap.
+4. Restore `~/.ssh`, then apply the dotfiles: `chezmoi init --apply git@github.com:tvblomberg/dotfiles.git` (see that repo).
 
 ## Changing the image
 
